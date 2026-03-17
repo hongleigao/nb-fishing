@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- 引入 Tailwind CSS 静态编译文件，使用 v=3 强制清除浏览器缓存 -->
-    <link rel="stylesheet" href="./style.css?v=4">
+    <link rel="stylesheet" href="./style.css?v=5">
 
     <style>
         /* 自定义滚动条样式 */
@@ -511,23 +511,33 @@
         }
 
         // --- 核心独立算法：视觉居中对齐 ---
-        function panToVisualCenter(lat, lng) {
+        // 新增 animate 参数，默认 true。初始加载分享链接时设为 false 以防动画乱窜
+        function panToVisualCenter(lat, lng, animate = true) {
             const zoom = map.getZoom();
             const point = map.project([lat, lng], zoom);
-            const mapHeight = document.getElementById('map').offsetHeight;
+            
+            // 【修复核心 1】：抛弃容易在初始化阶段取不到值的 DOM offsetHeight，改用纯数学视口计算
+            const mapHeight = window.innerHeight - 50; 
             const visibleHeight = (window.innerHeight * 0.35) - 50;
             const offsetY = (mapHeight / 2) - (visibleHeight / 2);
             
             point.y += offsetY;
             const targetLatLng = map.unproject(point, zoom);
-            map.panTo(targetLatLng, { animate: true, duration: 0.5 });
+            
+            // 【修复核心 2】：分享加载时的超大跨度位移，使用瞬间切换 setView，拒绝 panTo 动画带来的漂移 BUG
+            if (animate) {
+                map.panTo(targetLatLng, { animate: true, duration: 0.5 });
+            } else {
+                map.setView(targetLatLng, zoom);
+            }
         }
 
         // --- 提取：渲染常规水滴 Marker ---
-        function updateMarker(lat, lng) {
+        // 增加 isInitialLoad 标识位下发
+        function updateMarker(lat, lng, isInitialLoad = false) {
             if (currentMarker) map.removeLayer(currentMarker);
             currentMarker = L.marker([lat, lng]).addTo(map);
-            panToVisualCenter(lat, lng);
+            panToVisualCenter(lat, lng, !isInitialLoad);
         }
 
         function showLoading() {
@@ -558,16 +568,17 @@
         document.getElementById('share-btn').addEventListener('click', async () => {
             if (!currentShareLat || !currentShareLng) {
                 showToast('请先在地图上点击选择一个水域');
-                return;
-            }
+        // 提取重构：将原本在 map.on('click') 里的核心查询逻辑独立出来，以便页面加载时也能复用
+        // 增加 isInitialLoad 标识位下发
+        async function fetchRulesForLocation(lat, lng, isInitialLoad = false) {
+            // 更新全局状态
+            currentShareLat = lat;
+            currentShareLng = lng;
 
-            const dateVal = document.getElementById('rule-date').value;
-            // 构建分享链接，包含经纬度和日期
-            const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${currentShareLat}&lng=${currentShareLng}&date=${dateVal}`;
+            updateMarker(lat, lng, isInitialLoad);
+            showLoading();
 
-            // 尝试使用原生 Web Share API (在移动端会拉起微信/短信分享)
-            if (navigator.share) {
-                try {
+            try {
                     await navigator.share({
                         title: 'NB钓鱼规则查询',
                         text: '查看该钓点的官方钓鱼规则：',
@@ -689,10 +700,10 @@
                 // 等待字典加载完毕再渲染数据，避免物种名称显示为代码
                 await dictionaryPromise;
                 
-                // 【修复核心】：先设定分享链接打开时的默认缩放级别，再触发查询。
-                // fetchRulesForLocation 内部自带了精准的“防遮挡视觉居中”算法。
+                // 设置合适的放大层级
                 map.setZoom(12);
-                fetchRulesForLocation(urlLat, urlLng);
+                // 传入 true，告知系统这是首次加载，强制触发无动画的瞬移视觉对齐
+                fetchRulesForLocation(urlLat, urlLng, true);
             }
         });
 
