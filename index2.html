@@ -689,10 +689,10 @@
                 // 等待字典加载完毕再渲染数据，避免物种名称显示为代码
                 await dictionaryPromise;
                 
-                // 自动触发查询
+                // 【修复核心】：先设定分享链接打开时的默认缩放级别，再触发查询。
+                // fetchRulesForLocation 内部自带了精准的“防遮挡视觉居中”算法。
+                map.setZoom(12);
                 fetchRulesForLocation(urlLat, urlLng);
-                // 居中地图并平滑缩放到分享的位置
-                map.setView([urlLat, urlLng], 12); 
             }
         });
 
