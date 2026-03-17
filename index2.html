@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- 引入 Tailwind CSS 静态编译文件，使用 v=4 强制清除浏览器缓存 -->
-    <link rel="stylesheet" href="./style.css?v=4">
+    <!-- 引入 Tailwind CSS 静态编译文件，使用 v=6 强制清除浏览器缓存 -->
+    <link rel="stylesheet" href="./style.css?v=6">
 
     <style>
         /* 自定义滚动条样式 */
@@ -227,12 +227,16 @@
         // C. 核心算法与数据逻辑
         // =========================================================
         
-        // 视觉居中引擎
-        function panToVisualCenter(lat, lng, animate = true) {
-            const zoom = map.getZoom();
+        // --- 视觉居中引擎 (V3 修订版) ---
+        function panToVisualCenter(lat, lng, isInitialLoad = false) {
+            // 【关键修复 1】：强制重新测量容器，解决刚加载时 DOM 尺寸未定导致的水平/垂直偏差
+            map.invalidateSize(false);
+
+            // 首次加载分享链接时强制指定 zoom 12，否则取当前缩放级别
+            const zoom = isInitialLoad ? 12 : map.getZoom();
             const point = map.project([lat, lng], zoom);
             
-            // 抛弃 offsetHeight，改用纯数学视口计算，保障各种加载时序下绝对精确
+            // 抛弃容易出现时序 BUG 的 DOM 取值，全盘采用纯视口数学运算，绝对精准
             const mapHeight = window.innerHeight - 50; 
             const visibleHeight = (window.innerHeight * 0.35) - 50;
             const offsetY = (mapHeight / 2) - (visibleHeight / 2);
@@ -240,10 +244,11 @@
             point.y += offsetY;
             const targetLatLng = map.unproject(point, zoom);
             
-            if (animate) {
-                map.panTo(targetLatLng, { animate: true, duration: 0.5 });
+            // 【关键修复 2】：加载分享链接的瞬间，绝对禁止使用 panTo 动画，强制瞬移
+            if (isInitialLoad) {
+                map.setView(targetLatLng, zoom, { animate: false });
             } else {
-                map.setView(targetLatLng, zoom);
+                map.panTo(targetLatLng, { animate: true, duration: 0.5 });
             }
         }
 
@@ -251,7 +256,7 @@
         function updateMarker(lat, lng, isInitialLoad = false) {
             if (currentMarker) map.removeLayer(currentMarker);
             currentMarker = L.marker([lat, lng]).addTo(map);
-            panToVisualCenter(lat, lng, !isInitialLoad);
+            panToVisualCenter(lat, lng, isInitialLoad);
         }
 
         function showToast(message) {
@@ -302,6 +307,7 @@
         async function fetchRulesForLocation(lat, lng, isInitialLoad = false) {
             currentShareLat = lat;
             currentShareLng = lng;
+            // 传递 isInitialLoad 标识位
             updateMarker(lat, lng, isInitialLoad);
             showLoading();
 
@@ -578,7 +584,7 @@
                 radius: 6, fillColor: '#2563eb', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 1
             }).addTo(map);
 
-            panToVisualCenter(lat, lng);
+            panToVisualCenter(lat, lng, false);
         });
 
         map.on('locationerror', function(e) {
@@ -609,7 +615,7 @@
                 sheet.style.top = `${DEFAULT_TOP_VH}vh`;
                 
                 await dictionaryPromise;
-                map.setZoom(12);
+                // 注意：这里去除了产生干扰的 map.setZoom(12)，把核心控制权交还给 fetchRulesForLocation 内部的居中算法
                 fetchRulesForLocation(urlLat, urlLng, true);
             }
         });
