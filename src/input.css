@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'leaflet/dist/leaflet.css';
+
+:root {
+  --navbar-height: 50px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f1f5f9;
+}
+
+#map {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #e5e7eb;
+}
+
+#bottom-sheet {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(calc(100dvh - 50px - 45px));
+  bottom: 0;
+  width: 100%;
+  max-width: 28rem;
+  height: calc(100dvh - 50px);
+  z-index: 50;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  border-top-left-radius: 1.25rem;
+  border-top-right-radius: 1.25rem;
+  box-shadow: 0 -10px 30px -5px rgba(0,0,0,0.3);
+  will-change: transform;
+}
+
+/* 【UX 核心】动态底部留白逻辑 */
+/* 当面板处于 HALF 状态时，底部增加 40vh 的留白，允许内容滚过屏幕边缘 */
+#bottom-sheet[data-state="HALF"] #results-container {
+    padding-bottom: 40dvh;
+}
+
+/* 当面板处于 FULL 状态时，留白减小到常规水平 */
+#bottom-sheet[data-state="FULL"] #results-container {
+    padding-bottom: 2rem;
+}
+
+/* 【UX 优化】更显眼的拖拽条 */
+#sheet-header .w-12 {
+    width: 40px;
+    height: 4px;
+    background-color: #e2e8f0;
+    transition: background-color 0.2s;
+}
+#bottom-sheet:active #sheet-header .w-12 {
+    background-color: #cbd5e1;
+}
+
+.loader {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #1873b9;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 【UX 优化】更现代的滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 10px; 
+    border: 1px solid transparent;
+    background-clip: content-box;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.leaflet-control-container {
+  z-index: 40 !important;
+}

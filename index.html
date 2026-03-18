@@ -4,622 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NB Fishing Rules</title>
-    
-    <!-- 引入 Leaflet 地图样式和脚本 -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- 引入 Tailwind CSS 静态编译文件，使用 v=6 强制清除浏览器缓存 -->
-    <link rel="stylesheet" href="./style.css?v=6">
-
-    <style>
-        /* 自定义滚动条样式 */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* 加载动画 */
-        .loader {
-            border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6;
-            border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 解决地图层级与底图手势问题 */
-        .leaflet-control-container { z-index: 0 !important; }
-    </style>
+    <link rel="preconnect" href="https://gis-erd-der.gnb.ca">
 </head>
-<body class="bg-gray-200 h-screen w-screen flex justify-center font-sans text-gray-800 overflow-hidden">
+<body class="bg-gray-100 h-screen w-screen flex justify-center font-sans text-gray-800 overflow-hidden">
 
-    <!-- 移动端容器约束 -->
-    <div class="w-full max-w-md bg-white h-full relative shadow-2xl overflow-hidden">
+    <div class="w-full max-w-md bg-white h-full relative shadow-2xl overflow-hidden flex flex-col">
         
-        <!-- 顶部导航栏 (绝对定位固定) -->
-        <div id="navbar" class="absolute top-0 w-full h-[50px] bg-[#1873b9] text-white flex items-center justify-between px-4 shrink-0 z-20 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            <h1 class="text-[17px] font-bold tracking-wide">NB钓鱼规则查询</h1>
-            <svg id="share-btn" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 cursor-pointer active:opacity-70 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-        </div>
-
-        <!-- 全局 Toast 提示组件 -->
-        <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800/90 text-white px-4 py-2 rounded-full text-sm font-medium opacity-0 pointer-events-none transition-opacity duration-300 z-[3000]">
-            提示信息
-        </div>
-
-        <!-- 地图区域 -->
-        <div class="absolute top-[50px] bottom-0 w-full z-0">
-            <div id="map" class="h-full w-full"></div>
-            
-            <!-- 定位按钮 -->
-            <button id="locate-btn" class="absolute top-[80px] right-[10px] z-[1000] w-[34px] h-[34px] bg-white rounded-[4px] shadow-sm border-2 border-black/20 flex items-center justify-center text-gray-700 hover:bg-gray-50 cursor-pointer focus:outline-none">
-                <svg id="icon-target" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4" />
-                </svg>
-                <svg id="icon-spinner" class="animate-spin h-5 w-5 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+        <header id="navbar" class="w-full h-[50px] bg-[#1873b9] text-white flex items-center justify-between px-4 shrink-0 z-30 shadow-md">
+            <button class="p-1" aria-label="返回">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
             </button>
+            <h1 class="text-[17px] font-bold tracking-wide">NB Fishing Rules</h1>
+            <button id="share-btn" class="p-1" aria-label="分享">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+            </button>
+        </header>
 
-            <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-md text-xs font-bold text-[#1873b9] pointer-events-none">
-                点击地图水域查询
+        <main class="flex-1 relative z-0">
+            <div id="map" class="absolute inset-0 w-full h-full"></div>
+            
+            <div class="absolute top-4 right-2.5 z-[1000] flex flex-col space-y-2">
+                <button id="zoom-in-btn" class="w-[36px] h-[36px] bg-white rounded shadow-md flex items-center justify-center text-gray-700 font-bold text-xl active:bg-gray-100 border border-gray-100">+</button>
+                <button id="zoom-out-btn" class="w-[36px] h-[36px] bg-white rounded shadow-md flex items-center justify-center text-gray-700 font-bold text-xl active:bg-gray-100 border border-gray-100">−</button>
+                <button id="layer-toggle-btn" class="w-[36px] h-[36px] bg-white rounded shadow-md flex items-center justify-center text-gray-700 active:bg-gray-100 border border-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                </button>
+                <button id="locate-btn" class="w-[36px] h-[36px] bg-white rounded shadow-md flex items-center justify-center text-gray-700 active:bg-gray-100 border border-gray-100">
+                    <svg id="icon-target" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v2m0 12v2m8-8h-2M6 12H4" /></svg>
+                    <svg id="icon-spinner" class="animate-spin h-5 w-5 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
             </div>
-        </div>
 
-        <!-- 底部滑动面板 -->
-        <div id="bottom-sheet" class="absolute top-[35vh] bottom-0 w-full bg-white z-10 flex flex-col rounded-t-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.2)] transition-all duration-300 ease-out" style="will-change: top;">
-            <div id="sheet-header" class="px-5 pt-3 pb-3 shrink-0 border-b border-gray-100 bg-white rounded-t-2xl cursor-pointer touch-none select-none">
-                <div class="w-full flex justify-center pb-3 pointer-events-none">
-                    <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
-                </div>
+            <div class="main-hint absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm text-[10px] font-bold text-[#1873b9]">
+                Click water body to query
+            </div>
+        </main>
+
+        <!-- 【修复】去除冲突的 Tailwind 布局类，使用 input.css 中的绝对规则 -->
+        <section id="bottom-sheet">
+            <div id="sheet-header" class="px-5 pt-3 pb-3 shrink-0 border-b border-gray-100 cursor-pointer touch-none">
+                <div class="w-full flex justify-center pb-3"><div class="w-12 h-1.5 bg-gray-200 rounded-full"></div></div>
+                
                 <div class="flex items-center space-x-2 mb-2">
-                    <span class="text-[15px] font-bold text-gray-900 pointer-events-none">查询日期:</span>
-                    <input type="date" id="rule-date" class="bg-gray-100 rounded-md px-2 py-1 text-[15px] text-gray-800 border-none focus:outline-none focus:ring-1 focus:ring-blue-500 pointer-events-auto cursor-text" />
+                    <label for="rule-date" class="text-[14px] font-bold text-gray-900">Query Date:</label>
+                    <input type="date" id="rule-date" class="bg-gray-100 rounded px-2 py-0.5 text-[14px] text-gray-800 focus:ring-1 focus:ring-blue-500" />
                 </div>
-                <div class="space-y-0.5 text-[15px] pointer-events-none">
-                    <p><span class="font-bold text-gray-900">水域名称:</span> <span id="water-name" class="text-gray-800">-</span></p>
-                    <p><span class="font-bold text-gray-900">潮汐属性:</span> <span id="tidal-status" class="text-gray-800">-</span></p>
+
+                <div id="water-name" class="text-[18px] font-extrabold text-gray-900 leading-tight mb-1">Unnamed Water Body</div>
+
+                <div class="flex items-center space-x-4 text-[13px] text-gray-600">
+                    <p><span id="label-water-def" class="font-bold mr-1">Water Definition:</span><span id="water-definition">-</span></p>
+                    <p><span id="label-tidal-status" class="font-bold mr-1">Is Tidal:</span><span id="tidal-status">-</span></p>
                 </div>
             </div>
 
-            <div id="results-container" class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-white min-h-0">
-                <div id="empty-state" class="h-full flex flex-col items-center justify-center text-gray-400 space-y-2 mt-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                    <p class="text-sm">点击上方地图水域获取详情</p>
+            <div id="results-container" class="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
+                <div id="empty-state" class="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
+                    <p class="text-sm">Click map above to get rules</p>
                 </div>
-                <div id="loading-state" class="hidden h-full flex flex-col items-center justify-center space-y-4 mt-8">
+                <div id="loading-state" class="hidden h-full flex flex-col items-center justify-center space-y-4">
                     <div class="loader"></div>
-                    <p class="text-sm text-gray-500 font-medium animate-pulse">正在查询官方地理数据库...</p>
+                    <p class="text-xs text-gray-500 animate-pulse">Querying database...</p>
                 </div>
                 <div id="rules-content" class="hidden space-y-4 pb-10"></div>
             </div>
+        </section>
+
+        <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-gray-800/90 text-white px-4 py-2 rounded-full text-xs opacity-0 pointer-events-none transition-opacity duration-300 z-[3000]">
+            Tips
         </div>
     </div>
 
-    <script>
-        // =========================================================
-        // A. 底部面板拖拽与折叠引擎
-        // =========================================================
-        const sheet = document.getElementById('bottom-sheet');
-        const sheetHeader = document.getElementById('sheet-header');
-        
-        let startY = 0;
-        let currentY = 0;
-        let initialTop = 0;
-        let isDragging = false;
-        let startTime = 0; 
-        
-        const NAVBAR_HEIGHT = 50; 
-        const DEFAULT_TOP_VH = 35; 
-        const PEEK_HEIGHT = 45; 
-
-        function getDefaultTopPx() {
-            return window.innerHeight * (DEFAULT_TOP_VH / 100);
-        }
-
-        function dragStart(e) {
-            if (e.target.tagName === 'INPUT') return; 
-            isDragging = true;
-            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-            initialTop = sheet.getBoundingClientRect().top;
-            startTime = Date.now();
-            sheet.style.transition = 'none';
-        }
-
-        function dragMove(e) {
-            if (!isDragging) return;
-            e.preventDefault(); 
-            currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-            const deltaY = currentY - startY;
-            let newTop = initialTop + deltaY;
-            if (newTop < NAVBAR_HEIGHT) newTop = NAVBAR_HEIGHT;
-            if (newTop > window.innerHeight - PEEK_HEIGHT) newTop = window.innerHeight - PEEK_HEIGHT;
-            sheet.style.top = `${newTop}px`;
-        }
-
-        function dragEnd(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            const endY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
-            const distance = Math.abs(endY - startY);
-            const elapsed = Date.now() - startTime;
-            const currentTop = sheet.getBoundingClientRect().top;
-            const defaultTopPx = getDefaultTopPx();
-            const collapsedTopPx = window.innerHeight - PEEK_HEIGHT;
-
-            sheet.style.transition = 'top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-
-            if (distance < 10 && elapsed < 300) {
-                if (Math.abs(currentTop - collapsedTopPx) < 50) {
-                    sheet.style.top = `${DEFAULT_TOP_VH}vh`;
-                } else {
-                    sheet.style.top = `${collapsedTopPx}px`;
-                }
-                return;
-            }
-            
-            const expandThreshold = defaultTopPx - ((defaultTopPx - NAVBAR_HEIGHT) / 3);
-            const collapseThreshold = defaultTopPx + ((collapsedTopPx - defaultTopPx) / 3);
-
-            if (currentTop < expandThreshold) {
-                sheet.style.top = `${NAVBAR_HEIGHT}px`;
-            } else if (currentTop > collapseThreshold) {
-                sheet.style.top = `${collapsedTopPx}px`;
-            } else {
-                sheet.style.top = `${DEFAULT_TOP_VH}vh`;
-            }
-        }
-
-        sheetHeader.addEventListener('touchstart', dragStart, {passive: false});
-        document.addEventListener('touchmove', dragMove, {passive: false});
-        document.addEventListener('touchend', dragEnd);
-        sheetHeader.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-
-
-        // =========================================================
-        // B. 全局状态与基础配置
-        // =========================================================
-        const map = L.map('map', {zoomControl: false}).setView([45.331, -66.068], 10);
-        L.control.zoom({ position: 'topright' }).addTo(map);
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(map);
-
-        let currentMarker = null;
-        let speciesDict = {}; 
-        let currentRulesFeatures = []; 
-        let currentShareLat = null;
-        let currentShareLng = null;
-
-        const BASE_URL = "https://gis-erd-der.gnb.ca/gisserver/rest/services/Fishing_Regs_Site/Rivers_Lakes/MapServer";
-        const IGNORED_FIELDS = [
-            'OBJECTID', 'NONSPORT_FISHING_REGS_ID', 'IS_TIDAL', 
-            'SHAPE', 'GLOBALID', 'TOTAL_LENGTH_FLAG', 'WATER_ID', 
-            'SPECIES', 'SPECIES_DESC'
-        ];
-
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const dateInput = document.getElementById('rule-date');
-        dateInput.value = `${yyyy}-${mm}-${dd}`;
-
-        dateInput.addEventListener('change', () => {
-            if (currentRulesFeatures.length > 0) {
-                renderRules(currentRulesFeatures);
-            }
-        });
-
-
-        // =========================================================
-        // C. 核心算法与数据逻辑
-        // =========================================================
-        
-        // --- 视觉居中引擎 (V3 修订版) ---
-        function panToVisualCenter(lat, lng, isInitialLoad = false) {
-            // 【关键修复 1】：强制重新测量容器，解决刚加载时 DOM 尺寸未定导致的水平/垂直偏差
-            map.invalidateSize(false);
-
-            // 首次加载分享链接时强制指定 zoom 12，否则取当前缩放级别
-            const zoom = isInitialLoad ? 12 : map.getZoom();
-            const point = map.project([lat, lng], zoom);
-            
-            // 抛弃容易出现时序 BUG 的 DOM 取值，全盘采用纯视口数学运算，绝对精准
-            const mapHeight = window.innerHeight - 50; 
-            const visibleHeight = (window.innerHeight * 0.35) - 50;
-            const offsetY = (mapHeight / 2) - (visibleHeight / 2);
-            
-            point.y += offsetY;
-            const targetLatLng = map.unproject(point, zoom);
-            
-            // 【关键修复 2】：加载分享链接的瞬间，绝对禁止使用 panTo 动画，强制瞬移
-            if (isInitialLoad) {
-                map.setView(targetLatLng, zoom, { animate: false });
-            } else {
-                map.panTo(targetLatLng, { animate: true, duration: 0.5 });
-            }
-        }
-
-        // 渲染坐标点
-        function updateMarker(lat, lng, isInitialLoad = false) {
-            if (currentMarker) map.removeLayer(currentMarker);
-            currentMarker = L.marker([lat, lng]).addTo(map);
-            panToVisualCenter(lat, lng, isInitialLoad);
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.classList.remove('opacity-0');
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-            }, 2500);
-        }
-
-        function showLoading() {
-            document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('rules-content').classList.add('hidden');
-            document.getElementById('loading-state').classList.remove('hidden');
-        }
-
-        function renderEmpty(message) {
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('rules-content').classList.add('hidden');
-            const emptyState = document.getElementById('empty-state');
-            emptyState.classList.remove('hidden');
-            emptyState.querySelector('p').innerText = message;
-        }
-
-        async function initMetadata() {
-            try {
-                const res = await fetch(`${BASE_URL}/layers?f=json`);
-                const data = await res.json();
-                const allEntities = [...(data.layers || []), ...(data.tables || [])];
-                allEntities.forEach(entity => {
-                    if (entity.fields) {
-                        entity.fields.forEach(field => {
-                            if (field.name.toUpperCase() === 'SPECIES' && field.domain && field.domain.codedValues) {
-                                field.domain.codedValues.forEach(cv => {
-                                    speciesDict[cv.code] = cv.name;
-                                });
-                            }
-                        });
-                    }
-                });
-            } catch (e) {
-                console.warn("无法加载地理字典，将降级显示", e);
-            }
-        }
-        
-        // 核心查询函数
-        async function fetchRulesForLocation(lat, lng, isInitialLoad = false) {
-            currentShareLat = lat;
-            currentShareLng = lng;
-            // 传递 isInitialLoad 标识位
-            updateMarker(lat, lng, isInitialLoad);
-            showLoading();
-
-            try {
-                const spatialParams = new URLSearchParams({
-                    f: 'json', distance: 100, geometry: JSON.stringify({ x: lng, y: lat }),
-                    outFields: '*', outSR: 4326, spatialRel: 'esriSpatialRelIntersects',
-                    units: 'esriSRUnit_Meter', geometryType: 'esriGeometryPoint', inSR: 4326
-                });
-
-                const [res0, res1] = await Promise.all([
-                    fetch(`${BASE_URL}/0/query?${spatialParams.toString()}`).then(r => r.json()),
-                    fetch(`${BASE_URL}/1/query?${spatialParams.toString()}`).then(r => r.json())
-                ]);
-
-                let waterId = null, waterName = "-", isTidalStatus = null;
-                
-                if (res1.features && res1.features.length > 0) {
-                    waterId = res1.features[0].attributes.NON_SPORT_FISHING_ID;
-                    waterName = res1.features[0].attributes.NAME1 || "-";
-                    isTidalStatus = res1.features[0].attributes.IS_TIDAL;
-                } else if (res0.features && res0.features.length > 0) {
-                    waterId = res0.features[0].attributes.NON_SPORT_FISHING_ID;
-                    waterName = res0.features[0].attributes.NAME1 || "-";
-                    isTidalStatus = res0.features[0].attributes.IS_TIDAL;
-                }
-
-                if (!waterId) {
-                    document.getElementById('water-name').innerText = "-";
-                    document.getElementById('tidal-status').innerText = "-";
-                    renderEmpty("该位置未检测到官方标记的有效渔区。");
-                    return;
-                }
-
-                document.getElementById('water-name').innerText = waterName;
-                const tidalDict = { 0: "非潮汐水域", 1: "潮汐水域", 2: "未知" };
-                document.getElementById('tidal-status').innerText = isTidalStatus !== null ? (tidalDict[isTidalStatus] || `未知 (${isTidalStatus})`) : "未标注";
-
-                const rulesParams = new URLSearchParams({
-                    f: 'json', outFields: '*', returnGeometry: 'false',
-                    spatialRel: 'esriSpatialRelIntersects',
-                    where: `NONSPORT_FISHING_REGS_ID IN ('${waterId}') AND (IS_TIDAL = 1 OR IS_TIDAL IS NULL)`
-                });
-
-                const rulesRes = await fetch(`${BASE_URL}/10/query?${rulesParams.toString()}`).then(r => r.json());
-
-                if (!rulesRes.features || rulesRes.features.length === 0) {
-                    renderEmpty(`该水域 (${waterName}) 当前无适用的 Tidal Water 规则。`);
-                    return;
-                }
-
-                currentRulesFeatures = rulesRes.features;
-                renderRules(currentRulesFeatures);
-
-            } catch (error) {
-                console.error("API 查询失败:", error);
-                renderEmpty("网络请求失败，请检查连接或控制台日志。");
-            }
-        }
-
-        map.on('click', async function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            sheet.style.transition = 'top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-            sheet.style.top = `${DEFAULT_TOP_VH}vh`;
-            await fetchRulesForLocation(lat, lng);
-        });
-
-        function isRuleActiveOnDate(attrs, targetDateStr) {
-            if (!targetDateStr) return true;
-            const target = new Date(targetDateStr);
-            const targetVal = target.getMonth() * 100 + target.getDate(); 
-
-            let openField = attrs.OPEN_DATE_EXCEPTION ? 'OPEN_DATE_EXCEPTION' : 'OPEN_DATE';
-            let closeField = attrs.CLOSE_DATE_EXCEPTION ? 'CLOSE_DATE_EXCEPTION' : 'CLOSE_DATE';
-
-            if (attrs[openField] && attrs[closeField]) {
-                const oDate = new Date(attrs[openField]);
-                const cDate = new Date(attrs[closeField]);
-                const startVal = oDate.getUTCMonth() * 100 + oDate.getUTCDate();
-                const endVal = cDate.getUTCMonth() * 100 + cDate.getUTCDate();
-
-                if (startVal <= endVal) {
-                    return targetVal >= startVal && targetVal <= endVal;
-                } else {
-                    return targetVal >= startVal || targetVal <= endVal;
-                }
-            }
-            return true;
-        }
-
-        const keyTranslations = {
-            'DAILY_QUOTA': '每日限额', 'MINIMUM_LENGTH': '最小长度', 'MAXIMUM_LENGTH': '最大长度',
-            'OPEN_DATE_EXCEPTION': '开放日期', 'CLOSE_DATE_EXCEPTION': '关闭日期',
-            'OPEN_DATE': '常规开放日期', 'CLOSE_DATE': '常规关闭日期', 'SMELT_DIPNETTING': 'Smelt抄网捕捞'
-        };
-
-        function formatKeyName(key) {
-            const upperKey = key.toUpperCase();
-            if (keyTranslations[upperKey]) return keyTranslations[upperKey];
-            return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-        }
-
-        function formatValue(key, value, attrs) {
-            const upperKey = key.toUpperCase();
-            if (upperKey === 'DAILY_QUOTA' && (value === 0 || value === '0')) return '无限制';
-            if (upperKey === 'MINIMUM_LENGTH' || upperKey === 'MAXIMUM_LENGTH') {
-                if (value !== null && value !== '' && value !== 0 && value !== '0') {
-                    let cleanValue = String(value).replace(/(\s*cm\s*)/gi, '').trim();
-                    let suffix = ' cm';
-                    if (attrs['TOTAL_LENGTH_FLAG'] === 1 || attrs['TOTAL_LENGTH_FLAG'] === '1') suffix += ' (TL)';
-                    return `${cleanValue}${suffix}`;
-                } else return 'N/A';
-            }
-            if (upperKey === 'SMELT_DIPNETTING') {
-                const dipnettingDict = { 0: '禁止', 1: '允许', 2: '视情况而定' };
-                return dipnettingDict[value] !== undefined ? dipnettingDict[value] : value;
-            }
-            if (upperKey.includes('DATE') && typeof value === 'number' && value > 100000000000) {
-                const dateObj = new Date(value);
-                const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-                const day = String(dateObj.getUTCDate()).padStart(2, '0');
-                const year = dateObj.getUTCFullYear();
-                if ((upperKey.includes('OPEN_DATE_EXCEPTION') || upperKey.includes('CLOSE_DATE_EXCEPTION')) && year === 2000) {
-                    return `${month}月${day}日`; 
-                }
-                return `${year}-${month}-${day}`;
-            }
-            return value;
-        }
-
-        function renderRules(features) {
-            const rulesContent = document.getElementById('rules-content');
-            const selectedDate = document.getElementById('rule-date').value;
-            
-            document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('empty-state').classList.add('hidden');
-            rulesContent.innerHTML = '';
-            rulesContent.classList.remove('hidden');
-
-            const noticeHtml = `
-                <div class="bg-[#1873b9] text-white p-3 mb-4 rounded-md shadow-sm">
-                    <p class="text-[14px] leading-tight font-medium">
-                        Refer to the Gear and Other Restrictions tab above for gear type and water specific restrictions.
-                    </p>
-                </div>
-            `;
-            rulesContent.insertAdjacentHTML('beforeend', noticeHtml);
-
-            let activeCount = 0;
-            features.forEach(feature => {
-                const attrs = feature.attributes;
-                if (!isRuleActiveOnDate(attrs, selectedDate)) return; 
-                activeCount++;
-                
-                let speciesName = 'Unknown Species';
-                if (attrs.SPECIES !== null && attrs.SPECIES !== undefined) {
-                    speciesName = speciesDict[attrs.SPECIES] || `代码: ${attrs.SPECIES}`;
-                } else if (attrs.SPECIES_DESC) {
-                    speciesName = attrs.SPECIES_DESC;
-                }
-                
-                let cardHtml = `
-                    <div class="bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden shadow-sm">
-                        <div class="bg-[#1873b9] px-3 py-1.5">
-                            <h3 class="font-bold text-white text-[15px]">${speciesName}</h3>
-                        </div>
-                        <div class="p-3 space-y-0.5">
-                `;
-
-                for (let key in attrs) {
-                    if (!IGNORED_FIELDS.includes(key.toUpperCase()) && attrs[key] !== null && attrs[key] !== '') {
-                        const displayValue = formatValue(key, attrs[key], attrs);
-                        cardHtml += `
-                            <div class="flex text-[15px] leading-relaxed">
-                                <span class="text-gray-900 font-bold min-w-[75px]">${formatKeyName(key)}:</span>
-                                <span class="text-gray-800 ml-1">${displayValue}</span>
-                            </div>
-                        `;
-                    }
-                }
-                cardHtml += `</div></div>`;
-                rulesContent.insertAdjacentHTML('beforeend', cardHtml);
-            });
-
-            if (activeCount > 0) {
-                const footerNoticeHtml = `
-                    <div class="bg-gray-50 border-l-4 border-gray-400 p-3 mt-4 rounded-r-md">
-                        <p class="text-[13px] text-gray-500 font-medium italic">
-                            Any species not listed above does not have an open season on the selected date.
-                        </p>
-                    </div>
-                `;
-                rulesContent.insertAdjacentHTML('beforeend', footerNoticeHtml);
-            }
-
-            if (activeCount === 0) {
-                rulesContent.insertAdjacentHTML('beforeend', `
-                    <div class="p-6 text-center text-gray-500 bg-gray-50 rounded border border-dashed border-gray-300">
-                        在您选择的日期 <span class="font-bold text-gray-700">${selectedDate}</span> 内，<br>该水域暂无开放的钓鱼规则（休渔期）。
-                    </div>
-                `);
-            }
-        }
-
-        // =========================================================
-        // D. 交互触发模块 (分享与定位)
-        // =========================================================
-
-        document.getElementById('share-btn').addEventListener('click', async () => {
-            if (!currentShareLat || !currentShareLng) {
-                showToast('请先在地图上点击选择一个水域');
-                return;
-            }
-
-            const dateVal = document.getElementById('rule-date').value;
-            const shareUrl = `${window.location.origin}${window.location.pathname}?lat=${currentShareLat}&lng=${currentShareLng}&date=${dateVal}`;
-
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'NB钓鱼规则查询',
-                        text: '查看该钓点的官方钓鱼规则：',
-                        url: shareUrl
-                    });
-                } catch (err) {
-                    console.log('Share canceled or failed', err);
-                }
-            } else {
-                try {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = shareUrl;
-                    textArea.style.position = "fixed"; 
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    showToast('🔗 链接已复制，快去分享给钓友吧！');
-                } catch (err) {
-                    showToast('复制失败，请手动复制浏览器地址栏');
-                }
-            }
-        });
-
-        const locateBtn = document.getElementById('locate-btn');
-        const iconTarget = document.getElementById('icon-target');
-        const iconSpinner = document.getElementById('icon-spinner');
-        let userLocationMarker = null; 
-        let userAccuracyCircle = null; 
-
-        locateBtn.addEventListener('click', () => {
-            iconTarget.classList.add('hidden');
-            iconSpinner.classList.remove('hidden');
-            map.locate({ setView: false, maxZoom: 16, enableHighAccuracy: true });
-        });
-
-        map.on('locationfound', function(e) {
-            iconSpinner.classList.add('hidden');
-            iconTarget.classList.remove('hidden');
-
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-            const radius = e.accuracy / 2;
-
-            if (userLocationMarker) map.removeLayer(userLocationMarker);
-            if (userAccuracyCircle) map.removeLayer(userAccuracyCircle);
-
-            userAccuracyCircle = L.circle(e.latlng, {
-                radius: radius, color: '#1873b9', weight: 1, fillColor: '#1873b9', fillOpacity: 0.15
-            }).addTo(map);
-
-            userLocationMarker = L.circleMarker(e.latlng, {
-                radius: 6, fillColor: '#2563eb', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 1
-            }).addTo(map);
-
-            panToVisualCenter(lat, lng, false);
-        });
-
-        map.on('locationerror', function(e) {
-            iconSpinner.classList.add('hidden');
-            iconTarget.classList.remove('hidden');
-            renderEmpty("定位失败或权限被拒绝，请在系统设置中允许浏览器获取位置信息。");
-            if(!sheet.classList.contains('is-expanded')){
-                sheet.style.transition = 'top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                sheet.style.top = `${DEFAULT_TOP_VH}vh`;
-            }
-        });
-
-        // =========================================================
-        // E. 启动初始化：解析 URL 共享参数
-        // =========================================================
-        window.addEventListener('DOMContentLoaded', async () => {
-            const dictionaryPromise = initMetadata();
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlLat = parseFloat(urlParams.get('lat'));
-            const urlLng = parseFloat(urlParams.get('lng'));
-            const urlDate = urlParams.get('date');
-
-            if (urlLat && urlLng && !isNaN(urlLat) && !isNaN(urlLng)) {
-                if (urlDate) document.getElementById('rule-date').value = urlDate;
-                
-                sheet.style.transition = 'none'; 
-                sheet.style.top = `${DEFAULT_TOP_VH}vh`;
-                
-                await dictionaryPromise;
-                // 注意：这里去除了产生干扰的 map.setZoom(12)，把核心控制权交还给 fetchRulesForLocation 内部的居中算法
-                fetchRulesForLocation(urlLat, urlLng, true);
-            }
-        });
-
-    </script>
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
