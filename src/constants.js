@@ -42,11 +42,36 @@ export const UI_STRINGS = {
 };
 
 export const SPECIES_GROUPS = [
-    { id: 'non_sport', label: 'Non-Sport Fishing', layers: [0, 1], table: 10, layerKey: 'NON_SPORT_FISHING_ID', tableKey: 'NONSPORT_FISHING_REGS_ID', icon: '🐟' },
-    { id: 'trout', label: 'Trout', layers: [8, 9], table: 13, layerKey: 'TROUT_ID', tableKey: 'TROUT_REG_IDS', icon: '🐠' },
-    { id: 'atlantic_salmon', label: 'Atlantic Salmon', layers: [2, 3], table: 11, layerKey: 'ATLANTIC_SALMON_ID', tableKey: 'ATLANTIC_SALMON_REG_IDS', icon: '🎣' },
-    { id: 'landlocked_salmon', label: 'Landlocked Salmon', layers: [4, 5], table: 12, layerKey: 'LANDLOCKED_SALMON_ID', tableKey: 'LANDLOCKED_SALMON_REG_IDS', icon: '🦈' },
-    { id: 'smallmouth_bass', label: 'Smallmouth Bass', layers: [6, 7], table: 14, layerKey: 'SMALLMOUTH_BASS_ID', tableKey: 'SMALLMOUTH_BASS_REG_IDS', icon: '🍀' }
+    { 
+        id: 'non_sport', label: 'Non-Sport Fishing', icon: '🐟',
+        layers: [0, 1], table: 10, 
+        layerKey: 'NON_SPORT_FISHING_ID', tableKey: 'NONSPORT_FISHING_REGS_ID',
+        searchKeywords: { layers: ['Non-Sport', 'Non Sport'], table: 'NonSport' } 
+    },
+    { 
+        id: 'trout', label: 'Trout', icon: '🐠',
+        layers: [8, 9], table: 13, 
+        layerKey: 'TROUT_ID', tableKey: 'TROUT_REG_IDS',
+        searchKeywords: { layers: ['Trout'], table: 'Trout' } 
+    },
+    { 
+        id: 'atlantic_salmon', label: 'Atlantic Salmon', icon: '🎣',
+        layers: [2, 3], table: 11, 
+        layerKey: 'ATLANTIC_SALMON_ID', tableKey: 'ATLANTIC_SALMON_REG_IDS',
+        searchKeywords: { layers: ['Atlantic Salmon'], table: 'Atlantic Salmon' } 
+    },
+    { 
+        id: 'landlocked_salmon', label: 'Landlocked Salmon', icon: '🦈',
+        layers: [4, 5], table: 12, 
+        layerKey: 'LANDLOCKED_SALMON_ID', tableKey: 'LANDLOCKED_SALMON_REG_IDS',
+        searchKeywords: { layers: ['Landlocked Salmon'], table: 'Landlocked Salmon' } 
+    },
+    { 
+        id: 'smallmouth_bass', label: 'Smallmouth Bass', icon: '🍀',
+        layers: [6, 7], table: 14, 
+        layerKey: 'SMALLMOUTH_BASS_ID', tableKey: 'SMALLMOUTH_BASS_REG_IDS',
+        searchKeywords: { layers: ['Smallmouth Bass'], table: 'Smallmouth Bass' } 
+    }
 ];
 
 export const IGNORED_FIELDS = [

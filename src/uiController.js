@@ -31,7 +31,7 @@ export class UIController {
     }
 
     /**
-     * 【优化】更新 DOM 状态属性，供 CSS 调用
+     * 更新 DOM 状态属性，供 CSS 调用进行布局微调
      */
     _updateStateAttr() {
         if (this.sheet) this.sheet.setAttribute('data-state', this.snapState);
@@ -104,7 +104,7 @@ export class UIController {
                 this._setPos(PEEK, true);
                 this.snapState = 'PEEK';
             }
-            this._updateStateAttr(); // 同步状态到 CSS
+            this._updateStateAttr(); 
         };
 
         this.header.addEventListener('mousedown', onStart);
@@ -116,6 +116,7 @@ export class UIController {
     }
 
     expand() {
+        if (!this.sheet) return;
         const viewportH = window.innerHeight;
         this._setPos(viewportH * 0.35, true);
         this.snapState = 'HALF';
@@ -138,54 +139,74 @@ export class UIController {
 
     renderRules(rules, dict, groupLabel = 'Fishing Rule') {
         if (!this.rulesContent || !this.dateInput) return;
+        
         const date = dayjs(this.dateInput.value);
         this.rulesContent.innerHTML = '';
         this.rulesContent.classList.remove('hidden');
-        document.getElementById('loading-state')?.classList.add('hidden');
-        document.getElementById('empty-state')?.classList.add('hidden');
+        
+        // 隐藏加载与空状态
+        ['loading-state', 'empty-state'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
-        if (rules.length === 0) {
+        if (!rules || rules.length === 0) {
             const emptyMsg = UI_STRINGS.STATE_RULE_EMPTY_TEMPLATE.replace('{group}', groupLabel);
             this.renderEmpty(emptyMsg);
             return;
         }
 
+        const fragment = document.createDocumentFragment();
+        
         rules.forEach(rule => {
-            const a = rule.attributes;
-            const open = this._checkActive(a, date);
-            let name = groupLabel;
-            if (a.SPECIES !== null && a.SPECIES !== undefined) name = dict[String(a.SPECIES)] || `ID:${a.SPECIES}`;
-            else if (a.SPECIES_DESC) name = a.SPECIES_DESC;
-            else if (a.SEASON_NAME) name = a.SEASON_NAME;
+            const attrs = rule.attributes;
+            const isOpen = this._checkActive(attrs, date);
+            
+            let displayName = groupLabel;
+            if (attrs.SPECIES !== null && attrs.SPECIES !== undefined) {
+                displayName = dict.species?.[String(attrs.SPECIES)] || `Species ${attrs.SPECIES}`;
+            } else if (attrs.SPECIES_DESC) {
+                displayName = attrs.SPECIES_DESC;
+            } else if (attrs.SEASON_NAME) {
+                displayName = attrs.SEASON_NAME;
+            }
 
-            this.rulesContent.insertAdjacentHTML('beforeend', `
-                <div class="bg-white border ${open ? 'border-blue-100 shadow-sm' : 'border-gray-100 opacity-60'} rounded-lg overflow-hidden mb-3">
-                    <div class="${open ? 'bg-[#1873b9]' : 'bg-gray-400'} px-3 py-1.5 flex justify-between items-center">
-                        <span class="text-white font-bold text-sm">${name}</span>
-                        <span class="text-white text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-bold">
-                            ${open ? UI_STRINGS.STATUS_OPEN : UI_STRINGS.STATUS_CLOSED}
-                        </span>
+            const card = document.createElement('div');
+            card.className = `bg-white border ${isOpen ? 'border-blue-100 shadow-sm' : 'border-gray-100 opacity-60'} rounded-lg overflow-hidden mb-3 transition-all duration-300`;
+            
+            const fieldsHtml = Object.keys(attrs)
+                .filter(k => {
+                    const uk = k.toUpperCase();
+                    return !IGNORED_FIELDS.includes(uk) && attrs[k] !== null && attrs[k] !== '';
+                })
+                .map(k => `
+                    <div class="flex text-[13px] py-0.5 border-b border-gray-50 last:border-0">
+                        <span class="text-gray-500 font-medium min-w-[100px]">${this._fmtK(k)}</span>
+                        <span class="text-gray-900 ml-2 font-semibold flex-1">${this._fmtV(k, attrs[k], attrs)}</span>
                     </div>
-                    <div class="p-2.5 space-y-1">
-                        ${Object.keys(a).filter(k => !IGNORED_FIELDS.includes(k.toUpperCase()) && a[k] !== null && a[k] !== '').map(k => `
-                            <div class="flex text-[13px] leading-relaxed">
-                                <span class="text-gray-900 font-bold min-w-[85px]">${this._fmtK(k)}:</span>
-                                <span class="text-gray-700 ml-1">${this._fmtV(k, a[k], a)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                `).join('');
+
+            card.innerHTML = `
+                <div class="${isOpen ? 'bg-[#1873b9]' : 'bg-gray-400'} px-3 py-2 flex justify-between items-center">
+                    <span class="text-white font-bold text-sm tracking-tight">${displayName}</span>
+                    <span class="text-white text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-black uppercase">
+                        ${isOpen ? UI_STRINGS.STATUS_OPEN : UI_STRINGS.STATUS_CLOSED}
+                    </span>
                 </div>
-            `);
+                <div class="p-3 space-y-0.5">
+                    ${fieldsHtml || `<div class="text-xs text-gray-400 italic">No specific conditions listed</div>`}
+                </div>
+            `;
+            fragment.appendChild(card);
         });
 
-        // 【UX 优化】增加列表末尾的视觉提示
-        this.rulesContent.insertAdjacentHTML('beforeend', `
-            <div class="py-10 text-center">
-                <div class="inline-block px-4 py-1 rounded-full bg-gray-50 border border-gray-100 text-[10px] text-gray-400 font-bold tracking-widest uppercase">
-                    End of Regulations
-                </div>
+        const endDecorator = document.createElement('div');
+        endDecorator.className = 'py-12 text-center';
+        endDecorator.innerHTML = `
+            <div class="inline-block px-4 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-[9px] text-gray-400 font-black tracking-[0.2em] uppercase">
+                End of Regulations
             </div>
-        `);
+        `;
+        fragment.appendChild(endDecorator);
+
+        this.rulesContent.appendChild(fragment);
     }
 
     _checkActive(a, t) {
@@ -241,8 +262,16 @@ export class UIController {
     }
 
     updateHeaderInfo(waterName, isTidal, waterDefCode, waterDefDict) {
-        if (this.waterNameElem) this.waterNameElem.innerText = waterName || UI_STRINGS.VAL_UNNAMED_WATER;
-        if (this.waterDefElem) this.waterDefElem.innerText = (waterDefDict && waterDefDict[String(waterDefCode)]) || waterDefCode || "-";
-        if (this.tidalStatusElem) this.tidalStatusElem.innerText = isTidal !== null ? (TIDAL_DICT[isTidal] || `Maybe (${isTidal})`) : "Maybe";
+        if (this.waterNameElem) {
+            this.waterNameElem.innerText = waterName || UI_STRINGS.VAL_UNNAMED_WATER;
+            this.waterNameElem.classList.toggle('italic', !waterName);
+        }
+        if (this.waterDefElem) {
+            const defText = (waterDefDict && waterDefDict[String(waterDefCode)]) || waterDefCode || "-";
+            this.waterDefElem.innerText = defText;
+        }
+        if (this.tidalStatusElem) {
+            this.tidalStatusElem.innerText = isTidal !== null ? (TIDAL_DICT[isTidal] || `Maybe (${isTidal})`) : "Maybe";
+        }
     }
 }
