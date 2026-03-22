@@ -6,20 +6,48 @@
 
 :root {
   --navbar-height: 50px;
+  /* 品牌色：深邃海洋蓝 */
+  --brand-primary: #0f172a;
+  --brand-accent: #3b82f6;
+  --brand-success: #10b981;
+  --brand-danger: #ef4444;
+  --bg-soft: #f8fafc;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #f1f5f9;
+  background-color: var(--bg-soft);
+  color: var(--brand-primary);
+  /* 现代系统字体栈 */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #map {
   width: 100% !important;
   height: 100% !important;
-  background-color: #e5e7eb;
+  background-color: #e2e8f0;
 }
 
+/* --- 玻璃拟态导航栏 --- */
+#navbar {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--brand-primary) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: none !important;
+}
+
+#navbar h1 {
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+/* --- 精致化底栏 (Bottom Sheet) --- */
 #bottom-sheet {
   position: fixed;
   left: 50%;
@@ -32,62 +60,86 @@ body {
   background: white;
   display: flex;
   flex-direction: column;
-  border-top-left-radius: 1.25rem;
-  border-top-right-radius: 1.25rem;
-  box-shadow: 0 -10px 30px -5px rgba(0,0,0,0.3);
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  /* 柔和的分层阴影 */
+  box-shadow: 0 -20px 25px -5px rgba(0, 0, 0, 0.05), 0 -8px 10px -6px rgba(0, 0, 0, 0.05);
   will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 【UX 核心】动态底部留白逻辑 */
-/* 当面板处于 HALF 状态时，底部增加 40vh 的留白，允许内容滚过屏幕边缘 */
-#bottom-sheet[data-state="HALF"] #results-container {
-    padding-bottom: 40dvh;
-}
+#bottom-sheet[data-state="HALF"] #results-container { padding-bottom: 40dvh; }
+#bottom-sheet[data-state="FULL"] #results-container { padding-bottom: 2rem; }
 
-/* 当面板处于 FULL 状态时，留白减小到常规水平 */
-#bottom-sheet[data-state="FULL"] #results-container {
-    padding-bottom: 2rem;
-}
-
-/* 【UX 优化】更显眼的拖拽条 */
 #sheet-header .w-12 {
-    width: 40px;
+    width: 32px;
     height: 4px;
-    background-color: #e2e8f0;
-    transition: background-color 0.2s;
-}
-#bottom-sheet:active #sheet-header .w-12 {
     background-color: #cbd5e1;
+    border-radius: 99px;
+    opacity: 0.5;
 }
 
+/* --- 地图控件按钮 --- */
+.map-control-btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.map-control-btn:active {
+    transform: scale(0.92);
+}
+
+/* --- 加载骨架动画 --- */
 .loader {
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #1873b9;
+  border: 3px solid #f1f5f9;
+  border-top: 3px solid var(--brand-accent);
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
+  width: 28px;
+  height: 28px;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* 【UX 优化】更现代的滚动条样式 */
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+/* --- 自定义滚动条 --- */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { 
-    background: #cbd5e1; 
+    background: #e2e8f0; 
     border-radius: 10px; 
-    border: 1px solid transparent;
-    background-clip: content-box;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-.leaflet-control-container {
-  z-index: 40 !important;
+/* --- 高级法规卡片样式 --- */
+.rule-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rule-card:hover {
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.metric-badge {
+    background: #f1f5f9;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+}
+
+.metric-label {
+    font-size: 0.65rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-value {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: var(--brand-primary);
+    line-height: 1.2;
 }

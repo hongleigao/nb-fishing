@@ -1,0 +1,3 @@
+{"type":"click","text":"A\n      \n        整体视觉重构\n        引入海洋色系、毛玻璃效果、精致阴影与高级排版。","choice":"visual","id":null,"timestamp":1774193822201}
+{"type":"click","text":"B\n      \n        交互手感增强\n        丝滑的 Spring 动画、底栏触觉反馈、沉浸式平滑切换。","choice":"interaction","id":null,"timestamp":1774193823385}
+{"type":"click","text":"C\n      \n        数据可视化卡片\n        将数值限制、季节日期通过仪表盘或标签化组件直观呈现。","choice":"data_viz","id":null,"timestamp":1774193827376}

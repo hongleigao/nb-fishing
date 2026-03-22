@@ -16,7 +16,7 @@ export class UIController {
         this.toastElem = document.getElementById('toast');
         
         this.tabsWrapper = document.createElement('div');
-        this.tabsWrapper.className = 'px-5 py-2 border-b border-gray-50 flex space-x-4 overflow-x-auto no-scrollbar hidden';
+        this.tabsWrapper.className = 'px-5 py-2 border-b border-gray-50 flex space-x-4 overflow-x-auto no-scrollbar hidden transition-all duration-500';
         const container = document.getElementById('results-container');
         if (this.sheet && container) this.sheet.insertBefore(this.tabsWrapper, container);
 
@@ -30,9 +30,6 @@ export class UIController {
         }
     }
 
-    /**
-     * 更新 DOM 状态属性，供 CSS 调用进行布局微调
-     */
     _updateStateAttr() {
         if (this.sheet) this.sheet.setAttribute('data-state', this.snapState);
     }
@@ -62,7 +59,7 @@ export class UIController {
 
     _setPos(y, animate = false) {
         if (!this.sheet) return;
-        this.sheet.style.transition = animate ? 'transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none';
+        this.sheet.style.transition = animate ? 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
         this.sheet.style.transform = `translateX(-50%) translateY(${y}px)`;
     }
 
@@ -130,8 +127,8 @@ export class UIController {
         hits.forEach(({ group }) => {
             const btn = document.createElement('button');
             const isActive = group.id === activeId;
-            btn.className = `flex-shrink-0 flex flex-col items-center pb-1 border-b-2 transition-all ${isActive ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-400'}`;
-            btn.innerHTML = `<span class="text-lg">${group.icon}</span><span class="text-[10px]">${group.label}</span>`;
+            btn.className = `flex-shrink-0 flex flex-col items-center pb-2 border-b-2 transition-all duration-300 ${isActive ? 'border-blue-600 text-blue-600 font-black scale-105' : 'border-transparent text-gray-400 hover:text-gray-600'}`;
+            btn.innerHTML = `<span class="text-xl mb-0.5">${group.icon}</span><span class="text-[9px] uppercase tracking-wider">${group.label}</span>`;
             btn.onclick = (e) => { e.stopPropagation(); callback(group.id); };
             this.tabsWrapper.appendChild(btn);
         });
@@ -144,7 +141,6 @@ export class UIController {
         this.rulesContent.innerHTML = '';
         this.rulesContent.classList.remove('hidden');
         
-        // 隐藏加载与空状态
         ['loading-state', 'empty-state'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
         if (!rules || rules.length === 0) {
@@ -169,39 +165,64 @@ export class UIController {
             }
 
             const card = document.createElement('div');
-            card.className = `bg-white border ${isOpen ? 'border-blue-100 shadow-sm' : 'border-gray-100 opacity-60'} rounded-lg overflow-hidden mb-3 transition-all duration-300`;
+            card.className = `rule-card bg-white border ${isOpen ? 'border-blue-50 shadow-sm' : 'border-gray-100 opacity-60'} rounded-2xl overflow-hidden mb-4 border-l-4 ${isOpen ? 'border-l-blue-500' : 'border-l-gray-400'}`;
             
-            const fieldsHtml = Object.keys(attrs)
-                .filter(k => {
-                    const uk = k.toUpperCase();
-                    return !IGNORED_FIELDS.includes(uk) && attrs[k] !== null && attrs[k] !== '';
-                })
-                .map(k => `
-                    <div class="flex text-[13px] py-0.5 border-b border-gray-50 last:border-0">
-                        <span class="text-gray-500 font-medium min-w-[100px]">${this._fmtK(k)}</span>
-                        <span class="text-gray-900 ml-2 font-semibold flex-1">${this._fmtV(k, attrs[k], attrs)}</span>
-                    </div>
-                `).join('');
+            // 提取关键指标
+            const quota = attrs.DAILY_QUOTA;
+            const minSize = attrs.MIN_SIZE || attrs.MINIMUM_LENGTH;
 
             card.innerHTML = `
-                <div class="${isOpen ? 'bg-[#1873b9]' : 'bg-gray-400'} px-3 py-2 flex justify-between items-center">
-                    <span class="text-white font-bold text-sm tracking-tight">${displayName}</span>
-                    <span class="text-white text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-black uppercase">
-                        ${isOpen ? UI_STRINGS.STATUS_OPEN : UI_STRINGS.STATUS_CLOSED}
-                    </span>
+                <div class="px-4 py-3 flex justify-between items-center bg-gray-50/50">
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Species</span>
+                        <span class="text-slate-900 font-black text-base tracking-tight">${displayName}</span>
+                    </div>
+                    <div class="${isOpen ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} px-3 py-1 rounded-full font-black text-[10px] tracking-widest uppercase">
+                        ${isOpen ? 'Open' : 'Closed'}
+                    </div>
                 </div>
-                <div class="p-3 space-y-0.5">
-                    ${fieldsHtml || `<div class="text-xs text-gray-400 italic">No specific conditions listed</div>`}
+                
+                <div class="p-4">
+                    <!-- 指标卡片区域 -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="metric-badge">
+                            <div class="metric-label">Daily Limit</div>
+                            <div class="metric-value">${quota ? (String(quota).padStart(2, '0')) : 'No Limit'}</div>
+                        </div>
+                        <div class="metric-badge">
+                            <div class="metric-label">Min Size</div>
+                            <div class="metric-value">${minSize ? this._fmtV('MIN_SIZE', minSize, attrs) : 'No Limit'}</div>
+                        </div>
+                    </div>
+
+                    <!-- 详细列表 -->
+                    <div class="space-y-1.5 border-t border-gray-50 pt-3">
+                        ${Object.keys(attrs)
+                            .filter(k => {
+                                const uk = k.toUpperCase();
+                                // 在详细列表中排除已在指标卡片展示的字段
+                                return !IGNORED_FIELDS.includes(uk) && attrs[k] !== null && attrs[k] !== '' && 
+                                       uk !== 'DAILY_QUOTA' && uk !== 'MIN_SIZE' && uk !== 'MINIMUM_LENGTH';
+                            })
+                            .map(k => `
+                                <div class="flex items-start text-[12px] py-0.5">
+                                    <span class="text-slate-400 font-bold min-w-[110px] shrink-0 uppercase tracking-tighter text-[10px] mt-0.5">${this._fmtK(k)}</span>
+                                    <span class="text-slate-700 font-medium ml-2">${this._fmtV(k, attrs[k], attrs)}</span>
+                                </div>
+                            `).join('')}
+                    </div>
                 </div>
             `;
             fragment.appendChild(card);
         });
 
         const endDecorator = document.createElement('div');
-        endDecorator.className = 'py-12 text-center';
+        endDecorator.className = 'py-16 text-center';
         endDecorator.innerHTML = `
-            <div class="inline-block px-4 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-[9px] text-gray-400 font-black tracking-[0.2em] uppercase">
-                End of Regulations
+            <div class="inline-flex items-center space-x-3 opacity-20">
+                <div class="h-[1px] w-8 bg-slate-900"></div>
+                <div class="text-[9px] font-black uppercase tracking-[0.3em]">End of Regulations</div>
+                <div class="h-[1px] w-8 bg-slate-900"></div>
             </div>
         `;
         fragment.appendChild(endDecorator);
@@ -223,8 +244,8 @@ export class UIController {
     _fmtK(k) { 
         const uk = k.toUpperCase();
         if (KEY_TRANSLATIONS[uk]) return KEY_TRANSLATIONS[uk];
-        if (uk.startsWith('MIN_SIZE_')) return `Min Size for ${this._fmtSubSpecies(uk.replace('MIN_SIZE_', ''))}`;
-        if (uk.startsWith('MAX_SIZE_')) return `Max Size for ${this._fmtSubSpecies(uk.replace('MAX_SIZE_', ''))}`;
+        if (uk.startsWith('MIN_SIZE_')) return `Min: ${this._fmtSubSpecies(uk.replace('MIN_SIZE_', ''))}`;
+        if (uk.startsWith('MAX_SIZE_')) return `Max: ${this._fmtSubSpecies(uk.replace('MAX_SIZE_', ''))}`;
         return k.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
 
@@ -245,7 +266,19 @@ export class UIController {
 
     showLoading() {
         if (this.rulesContent) this.rulesContent.classList.add('hidden');
-        document.getElementById('loading-state')?.classList.remove('hidden');
+        const loader = document.getElementById('loading-state');
+        if (loader) {
+            loader.classList.remove('hidden');
+            loader.innerHTML = `
+                <div class="flex flex-col items-center justify-center space-y-6">
+                    <div class="loader"></div>
+                    <div class="space-y-2 text-center">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Synchronizing</p>
+                        <p class="text-sm font-bold text-slate-900 italic">ArcGIS Remote Server</p>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     renderEmpty(m) {
@@ -257,13 +290,16 @@ export class UIController {
     showToast(m) {
         if (!this.toastElem) return;
         this.toastElem.innerText = m;
-        this.toastElem.classList.remove('opacity-0');
-        setTimeout(() => this.toastElem.classList.add('opacity-0'), 2000);
+        this.toastElem.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl z-[3000] transition-all duration-500 transform translate-y-0 opacity-100';
+        setTimeout(() => {
+            this.toastElem.classList.add('opacity-0', '-translate-y-4');
+        }, 2500);
     }
 
     updateHeaderInfo(waterName, isTidal, waterDefCode, waterDefDict) {
         if (this.waterNameElem) {
             this.waterNameElem.innerText = waterName || UI_STRINGS.VAL_UNNAMED_WATER;
+            this.waterNameElem.classList.toggle('text-slate-400', !waterName);
             this.waterNameElem.classList.toggle('italic', !waterName);
         }
         if (this.waterDefElem) {

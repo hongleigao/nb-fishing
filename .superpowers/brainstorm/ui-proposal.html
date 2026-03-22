@@ -1,0 +1,78 @@
+<h2>nb-fishing UI/UX 优化提案 (v1)</h2>
+<p class="subtitle">结合 frontend-design 规范的视觉与交互升级方案</p>
+
+<div class="split">
+  <!-- Before -->
+  <div class="mockup">
+    <div class="mockup-header">现状 (Current)</div>
+    <div class="mockup-body" style="background: #f1f5f9; padding: 15px; height: 300px;">
+      <div style="background: #1873b9; color: white; padding: 10px; font-weight: bold; font-size: 14px;">NB Fishing Rules</div>
+      <div style="margin-top: 50px; background: white; border-radius: 12px; padding: 15px; border: 1px solid #e5e7eb;">
+        <div style="font-weight: bold; margin-bottom: 5px;">Atlantic Salmon</div>
+        <div style="font-size: 12px; color: #666;">Bag Limit: 5 per day</div>
+        <div style="margin-top: 10px; background: #1873b9; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px;">OPEN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- After -->
+  <div class="mockup">
+    <div class="mockup-header">提案 (Proposed)</div>
+    <div class="mockup-body" style="background: #fff; padding: 15px; height: 300px; overflow: hidden; position: relative;">
+      <!-- Glassmorphism Navbar -->
+      <div style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-weight: 900; letter-spacing: -0.5px; color: #0f172a;">
+        🌊 NB FISHING
+      </div>
+      <!-- Enhanced Card -->
+      <div style="margin-top: 20px; background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 16px; padding: 16px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <div style="font-weight: 900; font-size: 16px; color: #1e293b;">Atlantic Salmon</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Miramichi River System</div>
+          </div>
+          <div style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 99px; font-size: 9px; font-weight: 900;">OPEN</div>
+        </div>
+        <!-- Metric Highlight -->
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 10px; flex: 1;">
+            <div style="font-size: 9px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Daily Limit</div>
+            <div style="font-size: 18px; font-weight: 900; color: #0f172a;">05</div>
+          </div>
+          <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 10px; flex: 1;">
+            <div style="font-size: 9px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Min Size</div>
+            <div style="font-size: 18px; font-weight: 900; color: #0f172a;">48<span style="font-size: 10px; margin-left: 2px;">cm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>选择优化优先级</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="visual" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>整体视觉重构</h3>
+        <p>引入海洋色系、毛玻璃效果、精致阴影与高级排版。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="interaction" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>交互手感增强</h3>
+        <p>丝滑的 Spring 动画、底栏触觉反馈、沉浸式平滑切换。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="data_viz" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>数据可视化卡片</h3>
+        <p>将数值限制、季节日期通过仪表盘或标签化组件直观呈现。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle">请在浏览器中查看提案，并告诉我想执行哪些优化。</p>
